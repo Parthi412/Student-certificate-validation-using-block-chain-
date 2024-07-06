@@ -1,0 +1,107 @@
+import cv2
+import os
+import base64
+import streamlit as st
+from st_click_detector import click_detector
+import numpy
+import sys
+from PIL import Image, ImageDraw
+
+with open('style.css') as f:
+    st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
+font = cv2.FONT_HERSHEY_SIMPLEX
+fontScale = 3
+activities = ["Get certificate","About"]
+st.sidebar.image("images\\logo.png")
+choice=st.sidebar.selectbox("Select Activty",activities)
+
+
+def get_binary_file_downloader_html(bin_file, file_label='File'):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    bin_str = base64.b64encode(data).decode()
+    href = f'<a href="data:application/octet-stream;base64,{bin_str}" download="{os.path.basename(bin_file)}"> Download {file_label}</a>'
+    return href
+
+def annotate(name):
+    # this line of code is used to display the Images on the site which are clickable
+    st.write("Select Below Templates")
+    content = """
+                    <a id="Image_2" href="#"><img src="https://i.ibb.co/CmhrK9d/new-Certificate-template-2.png" alt="new-Certificate-template-2" border="0" width="300px" aspect-ratio="16:9" ></a>
+
+                    <a id="Image_3" href="#"><img src="https://i.ibb.co/hgqg4Hs/Certificate-template-3.png" alt="Certificate-template-3" border="0" width="300px" aspect-ratio="16:9" ></a>
+            """
+    # we store the Id of the clicked image in Clicked Variable 
+    clicked = click_detector(content)
+    # st.markdown(f"*{clicked} clicked*" )
+
+    # the path will be default to the default image
+    path = "images\\img.png"
+
+    # we cross check id with the paths available and assign the path for the selected image
+
+    if (clicked == "Image_2"):
+        path = "certificate_templates\\new_Certificate-template-2.png"
+    if (clicked == "Image_3"):
+        path = "certificate_templates\\Certificate-template-3.png"
+
+    
+    certi = cv2.imread(path)
+
+    if(clicked=="Image_3"):
+        original = cv2.putText(certi, name, (600, 850),font,   fontScale, (255, 255, 255), thickness=5)
+    else:
+        original = cv2.putText(certi, name, (600, 790),font,   fontScale, (0, 0, 0), thickness=5)
+    cv2.imwrite("Certificate.jpg",original)
+
+    
+    if st.button("View certificate"):
+        st.image(original, caption=None, width=350, use_column_width=None, clamp=False, channels='BGR',output_format='PNG')
+        st.markdown(get_binary_file_downloader_html('Certificate.jpg', 'Certificate'), unsafe_allow_html=True)
+
+
+if choice =="Get certificate":
+    st.title("Get Your Certificate")
+    na=st.text_input('Enter your name')
+    if len(na)>0:
+        annotate(na)
+    else:
+        st.write("Please enter Your name in the Above Field To download the Certificate")    
+    #st.markdown(get_binary_file_downloader_html(original, 'Picture'), unsafe_allow_html=True)
+
+if choice == "About":
+    st.header("Certificate-Generator")
+
+    st.write("""
+    Welcome to Certificate-Generator, an innovative and user-friendly platform designed to simplify the process of creating certificates for various occasions. Our project leverages the power of Streamlit, a modern and interactive web framework for Python, to provide you with an unparalleled experience in certificate generation.
+    """)
+
+    st.subheader("What Makes Us Awesome?")
+    st.write("""
+    - *Streamlit-Powered Interface:* We've chosen Streamlit for its simplicity and ease of use. The intuitive interface allows you to effortlessly navigate through the certificate generation process without any hassle.
+
+    - *Customization at Your Fingertips:* Personalize your certificates with ease! Certificate-Generator offers a range of customization options, allowing you to tailor each certificate to the specific event or achievement it represents. Choose from various templates, fonts, colors, and more.
+
+    - *Efficient and Fast:* Time is valuable, and we understand that. Certificate-Generator is designed to be fast and efficient, ensuring that you can generate professional-looking certificates in no time.
+
+    - *No Coding Required:* You don't need to be a coding expert to use Certificate-Generator. Our platform is user-friendly, making it accessible to individuals from all backgrounds and skill levels.
+    """)
+
+    st.subheader("How It Works")
+    st.write("""
+    1. *Select a Template:* Choose from our collection of professionally designed certificate templates. Whether it's for academic achievements, corporate events, or any other occasion, we've got you covered.
+
+    2. *Customize Details:* Input the necessary details such as the recipient's name, the event title, and the date. Customize the font, color scheme, and layout to match your preferences.
+
+    3. *Generate and Download:* Once you're satisfied with the design, click the "Generate" button. Your certificate will be instantly generated, and you can download it in a high-quality format ready for printing or sharing digitally.
+    """)
+
+    st.subheader("Get Started Today!")
+    st.write("""
+    Certificate-Generator is your go-to solution for creating stunning certificates effortlessly. Whether you're organizing an event or acknowledging someone's achievements, make it memorable with our streamlined certificate generation process.
+
+    For any questions, feedback, or support, feel free to reach out to us at [parthibanbaskaran777@gmail.com](mailto:contact@certificategenerator.com).
+
+    Make every certificate special with Certificate-Generator!
+    """)
